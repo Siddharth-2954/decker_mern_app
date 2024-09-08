@@ -1,0 +1,45 @@
+version: '3'
+services:
+  # MongoDB Service
+  mongo:
+    image: mongo
+    container_name: mongo
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongo-data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+
+  # Backend (Express/Node.js) Service
+  server:
+    build: ./server
+    container_name: backend
+    ports:
+      - '5000:3000'  # Exposing backend on port 5000
+    environment:
+      MONGO_URI: mongodb://mongo:27017/mern-app
+    depends_on:
+      - mongo
+    volumes:
+      - ./server:/app  # Changed to /app
+      - /app/node_modules  # Ensure node_modules are handled correctly
+    command: npm start
+    restart: always
+
+  # Frontend (React) Service
+  client:
+    build: ./client
+    container_name: frontend
+    ports:
+      - '3000:80'  # Exposing frontend on port 3000
+    volumes:
+      - ./client:/app  # Changed to /app
+      - /app/node_modules  # Ensure node_modules are handled correctly
+    restart: always
+    depends_on:
+      - server
+
+volumes:
+  mongo-data:
